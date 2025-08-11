@@ -1,12 +1,17 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap');
+
 /* Reset and Base Styles */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  font-size: 13px;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Google Sans Code", monospace;
   background: #0a0a0a;
   color: #ffffff;
   line-height: 1.5;
@@ -426,7 +431,7 @@ body {
 }
 
 .logo {
-  font-size: 1.8rem;
+  font-size: 6rem;
   font-weight: 600;
   color: #ffffff;
   margin-bottom: 0.25rem;
@@ -938,6 +943,9 @@ footer {
 
   .nav-container {
     padding: 0 1rem;
+  }
+  .nav-container h1{
+    font-size: 2.3rem;
   }
 
   main {

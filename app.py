@@ -15,7 +15,7 @@ app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-product
 # Configuration
 UPLOAD_FOLDER = 'static/wallpapers'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
-SECRET_CODE = os.environ.get('ADMIN_SECRET', '1234')  # Use environment variable
+SECRET_CODE = os.environ.get('ADMIN_SECRET', '7017')  # Use environment variable
 INSTAGRAM_URL = os.environ.get('INSTAGRAM_URL', 'https://www.instagram.com/amoled_vault/')
 DOWNLOAD_NAME_SUFFIX = os.environ.get('DOWNLOAD_SUFFIX', 'Amoled Vault')
 

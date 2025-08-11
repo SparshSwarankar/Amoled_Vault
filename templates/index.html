@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,7 @@
     <meta name="theme-color" content="#111111">
     <link rel="shortcut icon" href="/static/Colorful Minimalist Space Desktop Wallpaper 2.png" type="image/x-icon">
 </head>
+
 <body>
 
     <!-- Custom Install App Prompt -->
@@ -27,10 +29,10 @@
     </div>
     <!-- Message Container -->
     <div id="message-container" class="message-container"></div>
-    
+
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
-    
+
     <!-- Download Modal -->
     <div id="download-modal" class="download-modal hidden">
         <div class="download-modal-content">
@@ -42,7 +44,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Wallpaper Preview Modal -->
     <div id="wallpaper-modal" class="wallpaper-modal hidden">
         <div class="modal-backdrop" onclick="closeWallpaperModal()"></div>
@@ -69,7 +71,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="loading-content">
@@ -83,7 +85,7 @@
             <div class="nav-container">
                 <h1 class="logo">🎨 Amoled Vault</h1>
                 <p class="tagline">Premium wallpapers for your devices</p>
-                
+
                 <!-- Device Type Toggle -->
                 <div class="device-toggle-container">
                     <div class="device-toggle">
@@ -142,26 +144,21 @@
                 <div class="carousel" id="carousel">
                     {% for wallpaper in latest_wallpapers %}
                     <div class="carousel-slide" data-device="{{ wallpaper.device_type }}">
-                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}" 
-                             alt="{{ wallpaper.title }}" 
-                             loading="lazy"
-                             class="wallpaper-preview-img"
-                             data-filename="{{ wallpaper.filename }}"
-                             data-title="{{ wallpaper.title }}"
-                             data-category="{{ wallpaper.category }}"
-                             data-downloads="{{ wallpaper.get('download_count', 0) }}"
-                             data-id="{{ wallpaper.id }}"
-                             data-device="{{ wallpaper.device_type }}">
+                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}"
+                            alt="{{ wallpaper.title }}" loading="lazy" class="wallpaper-preview-img"
+                            data-filename="{{ wallpaper.filename }}" data-title="{{ wallpaper.title }}"
+                            data-category="{{ wallpaper.category }}"
+                            data-downloads="{{ wallpaper.get('download_count', 0) }}" data-id="{{ wallpaper.id }}"
+                            data-device="{{ wallpaper.device_type }}">
                         <div class="carousel-caption">
                             <h3>{{ wallpaper.title }}</h3>
                             <div class="caption-tags">
                                 <span class="category-tag">{{ wallpaper.category }}</span>
-                                <span class="device-tag device-{{ wallpaper.device_type }}">{{ wallpaper.device_type.upper() }}</span>
+                                <span class="device-tag device-{{ wallpaper.device_type }}">{{
+                                    wallpaper.device_type.upper() }}</span>
                             </div>
-                            <button class="download-btn wallpaper-download-btn"
-                                    data-filename="{{ wallpaper.filename }}"
-                                    data-title="{{ wallpaper.title }}"
-                                    data-id="{{ wallpaper.id }}">
+                            <button class="download-btn wallpaper-download-btn" data-filename="{{ wallpaper.filename }}"
+                                data-title="{{ wallpaper.title }}" data-id="{{ wallpaper.id }}">
                                 📥 Download
                             </button>
                         </div>
@@ -183,16 +180,12 @@
                 {% for wallpaper in popular_wallpapers %}
                 <div class="popular-card" data-device="{{ wallpaper.device_type }}">
                     <div class="popular-image-container">
-                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}" 
-                             alt="{{ wallpaper.title }}" 
-                             loading="lazy"
-                             class="popular-image wallpaper-preview-img"
-                             data-filename="{{ wallpaper.filename }}"
-                             data-title="{{ wallpaper.title }}"
-                             data-category="{{ wallpaper.category }}"
-                             data-downloads="{{ wallpaper.get('download_count', 0) }}"
-                             data-id="{{ wallpaper.id }}"
-                             data-device="{{ wallpaper.device_type }}">
+                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}"
+                            alt="{{ wallpaper.title }}" loading="lazy" class="popular-image wallpaper-preview-img"
+                            data-filename="{{ wallpaper.filename }}" data-title="{{ wallpaper.title }}"
+                            data-category="{{ wallpaper.category }}"
+                            data-downloads="{{ wallpaper.get('download_count', 0) }}" data-id="{{ wallpaper.id }}"
+                            data-device="{{ wallpaper.device_type }}">
                         <div class="download-badge">
                             <span class="download-count">{{ wallpaper.get('download_count', 0) }}</span>
                             <span class="download-label">downloads</span>
@@ -205,10 +198,8 @@
                             <div class="overlay-tags">
                                 <span class="category-tag">{{ wallpaper.category }}</span>
                             </div>
-                            <button class="download-btn wallpaper-download-btn"
-                                    data-filename="{{ wallpaper.filename }}"
-                                    data-title="{{ wallpaper.title }}"
-                                    data-id="{{ wallpaper.id }}">
+                            <button class="download-btn wallpaper-download-btn" data-filename="{{ wallpaper.filename }}"
+                                data-title="{{ wallpaper.title }}" data-id="{{ wallpaper.id }}">
                                 📥 Download
                             </button>
                         </div>
@@ -249,7 +240,8 @@
             <div class="filter-buttons">
                 <button class="filter-btn active" onclick="filterWallpapers('all')">All</button>
                 {% for category in categories %}
-                <button class="filter-btn" onclick="filterWallpapers('{{ category.lower() }}')">{{ category.title() }}</button>
+                <button class="filter-btn" onclick="filterWallpapers('{{ category.lower() }}')">{{ category.title()
+                    }}</button>
                 {% endfor %}
             </div>
         </section>
@@ -263,18 +255,15 @@
             </div>
             <div class="gallery-grid" id="gallery">
                 {% for wallpaper in wallpapers %}
-                <div class="wallpaper-card" data-category="{{ wallpaper.category }}" data-device="{{ wallpaper.device_type }}">
+                <div class="wallpaper-card" data-category="{{ wallpaper.category }}"
+                    data-device="{{ wallpaper.device_type }}">
                     <div class="image-container">
-                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}" 
-                             alt="{{ wallpaper.title }}" 
-                             loading="lazy"
-                             class="wallpaper-image wallpaper-preview-img"
-                             data-filename="{{ wallpaper.filename }}"
-                             data-title="{{ wallpaper.title }}"
-                             data-category="{{ wallpaper.category }}"
-                             data-downloads="{{ wallpaper.get('download_count', 0) }}"
-                             data-id="{{ wallpaper.id }}"
-                             data-device="{{ wallpaper.device_type }}">
+                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}"
+                            alt="{{ wallpaper.title }}" loading="lazy" class="wallpaper-image wallpaper-preview-img"
+                            data-filename="{{ wallpaper.filename }}" data-title="{{ wallpaper.title }}"
+                            data-category="{{ wallpaper.category }}"
+                            data-downloads="{{ wallpaper.get('download_count', 0) }}" data-id="{{ wallpaper.id }}"
+                            data-device="{{ wallpaper.device_type }}">
                         <div class="device-badge device-{{ wallpaper.device_type }}">
                             {{ wallpaper.device_type.upper() }}
                         </div>
@@ -283,10 +272,8 @@
                             <div class="overlay-tags">
                                 <span class="category-tag">{{ wallpaper.category }}</span>
                             </div>
-                            <button class="download-btn wallpaper-download-btn"
-                                    data-filename="{{ wallpaper.filename }}"
-                                    data-title="{{ wallpaper.title }}"
-                                    data-id="{{ wallpaper.id }}">
+                            <button class="download-btn wallpaper-download-btn" data-filename="{{ wallpaper.filename }}"
+                                data-title="{{ wallpaper.title }}" data-id="{{ wallpaper.id }}">
                                 📥 Download
                             </button>
                         </div>
@@ -331,113 +318,192 @@
     <script>
         // Pass Instagram URL to JavaScript
         window.INSTAGRAM_URL = '{{ instagram_url }}';
-        
+
         // Store wallpaper data for JavaScript access - using JSON encoding
         window.WALLPAPER_DATA = '{{ wallpapers|tojson }}';
-        
+
         // Current device type
         window.CURRENT_DEVICE_TYPE = 'mobile';
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
-<script>
-// Register service worker for PWA install prompt
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/static/js/service-worker.js')
-            .then(function(reg) {
-                // Service worker registered
-            })
-            .catch(function(err) {
-                console.log('ServiceWorker registration failed: ', err)
+    <script>
+        // Register service worker for PWA install prompt
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/static/js/service-worker.js')
+                    .then(function (reg) {
+                        // Service worker registered
+                    })
+                    .catch(function (err) {
+                        console.log('ServiceWorker registration failed: ', err)
+                    });
             });
-    });
-}
-</script>
-</main>
-
-<style>
-.install-app-prompt {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #222;
-    color: #fff;
-    border-radius: 1.2rem;
-    box-shadow: 0 4px 24px #0008;
-    padding: 1.5rem 2.5rem;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    min-width: 320px;
-    max-width: 90vw;
-}
-.install-app-prompt.hidden { display: none; }
-.install-app-content { display: flex; align-items: center; gap: 1.5rem; }
-.install-app-icon { font-size: 2.5rem; }
-.install-app-text h3 { margin: 0 0 0.2rem 0; font-size: 1.3rem; }
-.install-app-text p { margin: 0; font-size: 1rem; color: #ccc; }
-.install-app-actions { display: flex; gap: 1rem; }
-.install-btn {
-    background: #4ecdc4;
-    color: #111;
-    border: none;
-    border-radius: 0.7rem;
-    padding: 0.5rem 1.2rem;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.2s;
-}
-.install-btn:hover { background: #38b2ac; }
-.dismiss-btn {
-    background: transparent;
-    color: #fff;
-    border: 1px solid #444;
-    border-radius: 0.7rem;
-    padding: 0.5rem 1.2rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.2s, color 0.2s;
-}
-.dismiss-btn:hover { background: #333; color: #4ecdc4; }
-</style>
-
-<script>
-let deferredPrompt = null;
-const installPrompt = document.getElementById('install-app-prompt');
-const installBtn = document.getElementById('install-app-btn');
-const dismissBtn = document.getElementById('dismiss-install-btn');
-
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installPrompt.classList.remove('hidden');
-    // Hide the prompt after 5 seconds if not interacted with
-    setTimeout(() => {
-        if (!installPrompt.classList.contains('hidden')) {
-            installPrompt.classList.add('hidden');
         }
-    }, 5000);
-});
+    </script>
+    </main>
 
-installBtn && installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            installPrompt.classList.add('hidden');
+    <style>
+        .install-app-prompt {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #222;
+            color: #fff;
+            border-radius: 1.2rem;
+            box-shadow: 0 4px 24px #0008;
+            padding: 1.5rem 2.5rem;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            min-width: 320px;
+            max-width: 90vw;
         }
-        deferredPrompt = null;
-    }
-});
 
-dismissBtn && dismissBtn.addEventListener('click', () => {
-    installPrompt.classList.add('hidden');
-});
-</script>
+        .install-app-prompt.hidden {
+            display: none;
+        }
+
+        .install-app-content {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .install-app-icon {
+            font-size: 2.5rem;
+        }
+
+        .install-app-text h3 {
+            margin: 0 0 0.2rem 0;
+            font-size: 1.3rem;
+        }
+
+        .install-app-text p {
+            margin: 0;
+            font-size: 1rem;
+            color: #ccc;
+        }
+
+        .install-app-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .install-btn {
+            background: #4ecdc4;
+            color: #111;
+            border: none;
+            border-radius: 0.7rem;
+            padding: 0.5rem 1.2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .install-btn:hover {
+            background: #38b2ac;
+        }
+
+        .dismiss-btn {
+            background: transparent;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 0.7rem;
+            padding: 0.5rem 1.2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .dismiss-btn:hover {
+            background: #333;
+            color: #4ecdc4;
+        }
+
+        @media (max-width: 768px) {
+            .install-app-prompt {
+                bottom: 1rem;
+                padding: 1rem 1.5rem;
+                gap: 1rem;
+                /* min-width: unset; */
+                max-width: 95vw;
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+            }
+
+            .install-app-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+            }
+
+            .install-app-icon {
+                font-size: 2rem;
+            }
+
+            .install-app-text h3 {
+                font-size: 1.1rem;
+            }
+
+            .install-app-text p {
+                font-size: 0.9rem;
+            }
+
+            .install-app-actions {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem;
+            }
+
+            .install-btn,
+            .dismiss-btn {
+                width: 100%;
+                text-align: center;
+                padding: 0.6rem;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+
+    <script>
+        let deferredPrompt = null;
+        const installPrompt = document.getElementById('install-app-prompt');
+        const installBtn = document.getElementById('install-app-btn');
+        const dismissBtn = document.getElementById('dismiss-install-btn');
+
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installPrompt.classList.remove('hidden');
+            // Hide the prompt after 5 seconds if not interacted with
+            setTimeout(() => {
+                if (!installPrompt.classList.contains('hidden')) {
+                    installPrompt.classList.add('hidden');
+                }
+            }, 5000);
+        });
+
+        installBtn && installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installPrompt.classList.add('hidden');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        dismissBtn && dismissBtn.addEventListener('click', () => {
+            installPrompt.classList.add('hidden');
+        });
+    </script>
 </body>
+
 </html>
