@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,11 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="shortcut icon" href="/static/Colorful Minimalist Space Desktop Wallpaper 2.png" type="image/x-icon">
 </head>
+
 <body>
     <!-- Message Container -->
     <div id="message-container" class="message-container"></div>
-    
+
     <!-- Toast Container -->
     <div id="toast-container" class="toast-container"></div>
 
@@ -41,7 +43,7 @@
                     <a href="/" class="btn-home">🏠 Home</a>
                 </div>
             </div>
-            
+
             <!-- Success/Error Messages will be shown here via JavaScript -->
             <div id="upload-messages" class="upload-messages"></div>
 
@@ -147,7 +149,7 @@
                         <p>Loading wallpapers...</p>
                     </div>
                 </div>
-                
+
                 <!-- Bulk Actions -->
                 <div class="bulk-actions hidden" id="bulk-actions">
                     <div class="bulk-info">
@@ -171,7 +173,7 @@
                         <li>Ensure images are optimized for web (under 5MB recommended)</li>
                     </ul>
                 </div>
-                
+
                 <div class="info-section">
                     <h3>📂 Available Categories</h3>
                     <ul class="info-list">
@@ -236,7 +238,7 @@
         }
 
         // Check for flash messages and show them as custom messages
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Check URL parameters for success/error messages
             const urlParams = new URLSearchParams(window.location.search);
             const success = urlParams.get('success');
@@ -260,20 +262,20 @@
             const submitBtn = document.getElementById('submit-btn');
 
             // Drag and drop functionality
-            fileUploadArea.addEventListener('dragover', function(e) {
+            fileUploadArea.addEventListener('dragover', function (e) {
                 e.preventDefault();
                 fileUploadArea.classList.add('drag-over');
             });
 
-            fileUploadArea.addEventListener('dragleave', function(e) {
+            fileUploadArea.addEventListener('dragleave', function (e) {
                 e.preventDefault();
                 fileUploadArea.classList.remove('drag-over');
             });
 
-            fileUploadArea.addEventListener('drop', function(e) {
+            fileUploadArea.addEventListener('drop', function (e) {
                 e.preventDefault();
                 fileUploadArea.classList.remove('drag-over');
-                
+
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
                     fileInput.files = files;
@@ -282,7 +284,7 @@
             });
 
             // File input change
-            fileInput.addEventListener('change', function(e) {
+            fileInput.addEventListener('change', function (e) {
                 if (e.target.files.length > 0) {
                     handleFileSelect(e.target.files);
                 }
@@ -313,7 +315,7 @@
 
                     // Show file preview
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const previewItem = document.createElement('div');
                         previewItem.className = 'preview-item';
                         previewItem.innerHTML = `
@@ -338,7 +340,7 @@
             }
 
             // Remove file preview item
-            window.removeFilePreviewItem = function(element) {
+            window.removeFilePreviewItem = function (element) {
                 element.closest('.preview-item').remove();
                 if (filePreview.children.length === 0) {
                     filePreview.classList.add('hidden');
@@ -347,13 +349,13 @@
             };
 
             // Form submission
-            uploadForm.addEventListener('submit', function(e) {
+            uploadForm.addEventListener('submit', function (e) {
                 e.preventDefault();
-                
+
                 // Show loading state
                 submitBtn.classList.add('loading');
                 submitBtn.disabled = true;
-                
+
                 showMessage("📤 Uploading wallpapers... Please wait.", "info", 3000);
                 showToast("Upload in progress... ⏳", "info", 2000);
 
@@ -429,7 +431,7 @@
         }
 
         // Initial load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             loadWallpapersForDelete(CURRENT_DEVICE_TYPE);
         });
 
@@ -439,9 +441,9 @@
             const selected = Array.from(checkboxes).filter(cb => cb.checked);
             const bulkActions = document.getElementById('bulk-actions');
             const selectedCount = document.getElementById('selected-count');
-            
+
             selectedCount.textContent = selected.length;
-            
+
             if (selected.length > 0) {
                 bulkActions.classList.remove('hidden');
             } else {
@@ -462,29 +464,29 @@
             if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis action cannot be undone.`)) {
                 return;
             }
-            
+
             try {
                 showMessage(`Deleting "${title}"... 🗑️`, "info", 2000);
-                
+
                 const response = await fetch(`/api/delete-wallpaper/${wallpaperId}`, {
                     method: 'DELETE'
                 });
-                
+
                 if (response.ok) {
                     showMessage(`"${title}" deleted successfully! ✅`, "success", 3000);
                     showToast("Wallpaper deleted! 🗑️", "success", 2000);
-                    
+
                     // Remove from list
                     const wallpaperItem = document.querySelector(`[data-id="${wallpaperId}"]`);
                     if (wallpaperItem) {
                         wallpaperItem.remove();
                     }
-                    
+
                     updateSelection();
                 } else {
                     throw new Error('Delete failed');
                 }
-                
+
             } catch (error) {
                 console.error('Error deleting wallpaper:', error);
                 showMessage("Failed to delete wallpaper 😞", "error", 3000);
@@ -495,21 +497,21 @@
         async function deleteSelected() {
             const checkboxes = document.querySelectorAll('.wallpaper-item input[type="checkbox"]:checked');
             const selectedIds = Array.from(checkboxes).map(cb => cb.closest('.wallpaper-item').dataset.id);
-            
+
             if (selectedIds.length === 0) return;
-            
+
             if (!confirm(`Are you sure you want to delete ${selectedIds.length} wallpaper(s)?\n\nThis action cannot be undone.`)) {
                 return;
             }
-            
+
             try {
                 showMessage(`Deleting ${selectedIds.length} wallpapers... 🗑️`, "info", 3000);
-                
+
                 for (const id of selectedIds) {
                     const response = await fetch(`/api/delete-wallpaper/${id}`, {
                         method: 'DELETE'
                     });
-                    
+
                     if (response.ok) {
                         const wallpaperItem = document.querySelector(`[data-id="${id}"]`);
                         if (wallpaperItem) {
@@ -517,11 +519,11 @@
                         }
                     }
                 }
-                
+
                 showMessage(`${selectedIds.length} wallpapers deleted successfully! ✅`, "success", 4000);
                 showToast("Bulk delete completed! 🗑️", "success", 3000);
                 updateSelection();
-                
+
             } catch (error) {
                 console.error('Error deleting wallpapers:', error);
                 showMessage("Failed to delete some wallpapers 😞", "error", 3000);
@@ -542,7 +544,7 @@
                     <img src="/static/wallpapers/${filename}" alt="${title}" class="preview-image">
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
             showToast(`Previewing ${title} 👁️`, "info", 2000);
         }
@@ -554,4 +556,5 @@
     </script>
     <script src="{{ url_for('static', filename='js/upload-multiple.js') }}"></script>
 </body>
+
 </html>
