@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Handle multiple file selection with validation
   function handleMultipleFiles(files) {
-    const maxFiles = 10
+    const maxFiles = 20
     // Prevent duplicates
     const existingNames = new Set(selectedFiles.map((f) => f.name + f.size))
     const newFiles = files.filter((f) => !existingNames.has(f.name + f.size))
