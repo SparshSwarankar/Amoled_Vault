@@ -398,7 +398,7 @@
                         <input type="checkbox" id="wallpaper-${wallpaper.id}" onchange="updateSelection()">
                     </div>
                     <div class="item-image">
-                        <img src="/static/wallpapers/${wallpaper.filename}" alt="${wallpaper.title}" loading="lazy">
+                        <img src="${wallpaper.filename}" alt="${wallpaper.title}" loading="lazy">
                     </div>
                     <div class="item-info">
                         <h4>${wallpaper.title}</h4>
@@ -541,7 +541,7 @@
                         <h3>${title}</h3>
                         <button onclick="this.closest('.preview-modal').remove()">×</button>
                     </div>
-                    <img src="/static/wallpapers/${filename}" alt="${title}" class="preview-image">
+                    <img src="${filename}" alt="${title}" class="preview-image">
                 </div>
             `;
 

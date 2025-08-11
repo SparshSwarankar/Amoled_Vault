@@ -6,11 +6,14 @@ import uuid
 from datetime import datetime
 from collections import Counter
 from datetime import datetime, timedelta
+from supabase import create_client, Client
+
 
 app = Flask(__name__)
 
 # Production configuration for Render
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+
 
 # Configuration
 UPLOAD_FOLDER = 'static/wallpapers'
@@ -161,121 +164,142 @@ def download_wallpaper(filename):
     except FileNotFoundError:
         return "File not found", 404
 
-@app.route('/upload')
-def upload_page():
-    """Secret upload page - requires secret parameter"""
-    secret = request.args.get('secret')
-    if secret != SECRET_CODE:
-        return render_template('upload.html', unauthorized=True)
-    
-    return render_template('upload.html', authorized=True)
+
+# Supabase connection
+SUPABASE_URL = "https://pasetesvrkifdxfolcoq.supabase.co"
+SUPABASE_KEY = "sb_secret_3Hm9MdC45QuwEStr9Jw5AQ_etwkJGgj"
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+BUCKET_NAME = "wallpapers"  # make sure this bucket exists
 
 @app.route('/upload', methods=['POST'])
 def upload_wallpaper():
-    """Handle multiple wallpaper uploads"""
+    """Handle multiple wallpaper uploads to Supabase"""
     secret = request.args.get('secret')
     if secret != SECRET_CODE:
         return "Unauthorized", 403
-    
+
     if 'files' not in request.files:
         flash('No files selected')
         return redirect(url_for('upload_page', secret=secret))
-    
+
     files = request.files.getlist('files')
     title_base = request.form.get('title', '').strip()
     category = request.form.get('category', '').strip()
     device_type = request.form.get('device_type', '').strip()
-    
+
     if not files or all(file.filename == '' for file in files):
         flash('No files selected')
         return redirect(url_for('upload_page', secret=secret))
-    
+
     if not title_base or not category or not device_type:
         flash('Title, category, and device type are required')
         return redirect(url_for('upload_page', secret=secret))
-    
+
     if device_type not in ['mobile', 'pc']:
         flash('Invalid device type')
         return redirect(url_for('upload_page', secret=secret))
-    
+
     uploaded_count = 0
     failed_count = 0
-    
-    db = load_database()
-    
+
     for i, file in enumerate(files):
         if file and allowed_file(file.filename):
             try:
                 file_extension = file.filename.rsplit('.', 1)[1].lower()
                 unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
-                
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                file.save(file_path)
-                
-                if len(files) > 1:
-                    file_title = f"{title_base} #{i + 1}"
-                else:
-                    file_title = title_base
-                
-                new_wallpaper = {
-                    'id': str(uuid.uuid4()),
-                    'title': file_title,
-                    'category': category,
-                    'device_type': device_type,
-                    'filename': unique_filename,
-                    'upload_date': datetime.now().isoformat(),
-                    'download_count': 0
-                }
-                
-                db['wallpapers'].append(new_wallpaper)
+
+                # Path in bucket (e.g., "mobile/uuid.png")
+                file_path = f"{device_type}/{unique_filename}"
+
+                # Upload file to Supabase Storage
+                res = supabase.storage.from_(BUCKET_NAME).upload(file_path, file)
+                if isinstance(res, dict) and res.get("error"):
+                    print(f"Error uploading {file.filename}: {res['error']['message']}")
+                    failed_count += 1
+                    continue
+
+                # File public URL
+                public_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
+
+                # Title for this file
+                file_title = f"{title_base} #{i + 1}" if len(files) > 1 else title_base
+
+                # Insert into Supabase Table
+                supabase.table("wallpapers").insert({
+                    "id": str(uuid.uuid4()),
+                    "title": file_title,
+                    "category": category,
+                    "device_type": device_type,
+                    "filename": unique_filename,
+                    "file_url": public_url,
+                    "upload_date": datetime.now().isoformat(),
+                    "download_count": 0
+                }).execute()
+
                 uploaded_count += 1
-                
+
             except Exception as e:
                 print(f"Error uploading file {file.filename}: {e}")
                 failed_count += 1
         else:
             failed_count += 1
-    
-    save_database(db)
-    
+
+    # Flash messages
     if uploaded_count > 0 and failed_count == 0:
         flash(f'Successfully uploaded {uploaded_count} wallpaper(s)!')
     elif uploaded_count > 0 and failed_count > 0:
-        flash(f'Uploaded {uploaded_count} wallpaper(s), {failed_count} failed. Check file types.')
+        flash(f'Uploaded {uploaded_count} wallpaper(s), {failed_count} failed.')
     else:
-        flash('All uploads failed. Please check file types and try again.')
-    
+        flash('All uploads failed. Please check file types.')
+
     return redirect(url_for('upload_page', secret=secret))
+
+def ensure_downloads_table():
+    """Ensure the downloads table exists in Supabase."""
+    try:
+        sql = """
+        CREATE TABLE IF NOT EXISTS downloads (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        wallpaper_id UUID NOT NULL REFERENCES wallpapers(id) ON DELETE CASCADE,
+        timestamp TIMESTAMP DEFAULT NOW(),
+        ip TEXT
+        );
+        """
+        supabase.rpc("exec_sql", {"sql": sql}).execute()
+    except Exception as e:
+        print(f"⚠️ Could not verify/create downloads table: {e}")
 
 @app.route('/api/track-download', methods=['POST'])
 def track_download():
-    """Track wallpaper download"""
-    data = request.get_json()
-    wallpaper_id = data.get('wallpaper_id')
-    
-    if not wallpaper_id:
-        return jsonify({'error': 'Missing wallpaper_id'}), 400
-    
-    db = load_database()
-    
-    if 'downloads' not in db:
-        db['downloads'] = []
-    
-    download_record = {
-        'wallpaper_id': wallpaper_id,
-        'timestamp': datetime.now().isoformat(),
-        'ip': request.remote_addr
-    }
-    
-    db['downloads'].append(download_record)
-    
-    for wallpaper in db['wallpapers']:
-        if wallpaper['id'] == wallpaper_id:
-            wallpaper['download_count'] = wallpaper.get('download_count', 0) + 1
-            break
-    
-    save_database(db)
-    return jsonify({'success': True})
+    """Track wallpaper download in Supabase"""
+    try:
+        ensure_downloads_table()
+
+        data = request.get_json()
+        wallpaper_id = data.get('wallpaper_id')
+        if not wallpaper_id:
+            return jsonify({'error': 'Missing wallpaper_id'}), 400
+
+        # Insert into downloads table
+        supabase.table("downloads").insert({
+            "wallpaper_id": wallpaper_id,
+            "ip": request.remote_addr
+        }).execute()
+
+        # Increment download_count in wallpapers table
+        current = supabase.table("wallpapers").select("download_count").eq("id", wallpaper_id).execute()
+        if current.data:
+            count = current.data[0].get("download_count", 0) + 1
+            supabase.table("wallpapers").update({"download_count": count}).eq("id", wallpaper_id).execute()
+
+        return jsonify({'success': True})
+
+    except Exception as e:
+        print(f"❌ Error tracking download: {e}")
+        return jsonify({'error': 'Failed to track download'}), 500
+
+
 
 @app.route('/api/popular')
 def get_popular_wallpapers():
