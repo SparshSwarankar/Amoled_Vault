@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: amoled_vault
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_SECRET
+        value: "12345"
+      - key: INSTAGRAM_URL
+        value: "https://www.instagram.com/amoled_vault/"
+      - key: DOWNLOAD_SUFFIX
+        value: "Amoled Vault"

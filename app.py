@@ -1,6 +1,3 @@
-# Serve manifest.json at root for PWA support
-from flask import send_from_directory
-
 from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, flash
 import json
 import os
@@ -10,22 +7,20 @@ from datetime import datetime
 from collections import Counter
 from datetime import datetime, timedelta
 
-
-
-
-
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-here'  # Change this in production
+
+# Production configuration for Render
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
 
 # Configuration
 UPLOAD_FOLDER = 'static/wallpapers'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
-SECRET_CODE = '1234'  # Change this secret code for upload access
-INSTAGRAM_URL = 'https://www.instagram.com/amoled_vault/'  # Change to your Instagram URL
-# Download name suffix (change this variable to update the download name easily)
-DOWNLOAD_NAME_SUFFIX = 'Amoled Vault'  # Change this to whatever you want
+SECRET_CODE = os.environ.get('ADMIN_SECRET', '1234')  # Use environment variable
+INSTAGRAM_URL = os.environ.get('INSTAGRAM_URL', 'https://www.instagram.com/amoled_vault/')
+DOWNLOAD_NAME_SUFFIX = os.environ.get('DOWNLOAD_SUFFIX', 'Amoled Vault')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -39,7 +34,7 @@ def load_database():
         with open('database.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        return {"wallpapers": []}
+        return {"wallpapers": [], "downloads": []}
 
 def save_database(data):
     """Save wallpaper metadata to JSON file"""
@@ -80,12 +75,14 @@ def index():
 @app.route('/manifest.json')
 def manifest():
     return send_from_directory('.', 'manifest.json')
+
 @app.route('/api/wallpapers')
 def api_wallpapers():
     """API endpoint to get wallpapers (for AJAX filtering)"""
     db = load_database()
     category = request.args.get('category', 'all')
     device_type = request.args.get('device', 'mobile')
+    search = request.args.get('search', '').lower()
     
     wallpapers = db.get('wallpapers', [])
     
@@ -97,6 +94,10 @@ def api_wallpapers():
     if category != 'all':
         wallpapers = [w for w in wallpapers if w['category'].lower() == category.lower()]
     
+    # Filter by search term
+    if search:
+        wallpapers = [w for w in wallpapers if search in w['title'].lower() or search in w['category'].lower()]
+    
     return jsonify(wallpapers)
 
 @app.route('/api/activity')
@@ -105,7 +106,7 @@ def api_activity():
     db = load_database()
     wallpapers = db.get('wallpapers', [])
     downloads = db.get('downloads', [])
-    activity_type = request.args.get('type', 'all')  # all, downloads, uploads
+    activity_type = request.args.get('type', 'all')
     device_type = request.args.get('device', 'mobile')
 
     # Filter wallpapers by device type
@@ -120,7 +121,6 @@ def api_activity():
     if activity_type in ['all', 'downloads']:
         for d in downloads:
             if d['wallpaper_id'] in wallpaper_ids:
-                # Find wallpaper info
                 w = next((w for w in filtered_wallpapers if w['id'] == d['wallpaper_id']), None)
                 if w:
                     activity.append({
@@ -130,7 +130,7 @@ def api_activity():
                         'date': d['timestamp'],
                     })
 
-    # Collect upload activity (from wallpaper upload_date)
+    # Collect upload activity
     if activity_type in ['all', 'uploads']:
         for w in filtered_wallpapers:
             if 'upload_date' in w:
@@ -141,16 +141,14 @@ def api_activity():
                     'date': w['upload_date'],
                 })
 
-    # Sort by date descending (most recent first)
     activity.sort(key=lambda x: x['date'], reverse=True)
-    # Limit to 30 most recent
     activity = activity[:30]
     return jsonify(activity)
+
 @app.route('/download/<filename>')
 def download_wallpaper(filename):
     """Serve wallpaper files for download"""
     try:
-        # Load database to get category for this file
         db = load_database()
         wallpapers = db.get('wallpapers', [])
         wallpaper = next((w for w in wallpapers if w['filename'] == filename), None)
@@ -203,27 +201,22 @@ def upload_wallpaper():
     uploaded_count = 0
     failed_count = 0
     
-    # Load current database
     db = load_database()
     
     for i, file in enumerate(files):
         if file and allowed_file(file.filename):
             try:
-                # Generate unique filename
                 file_extension = file.filename.rsplit('.', 1)[1].lower()
                 unique_filename = f"{uuid.uuid4().hex}.{file_extension}"
                 
-                # Save file
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                 file.save(file_path)
                 
-                # Create title for multiple files
                 if len(files) > 1:
                     file_title = f"{title_base} #{i + 1}"
                 else:
                     file_title = title_base
                 
-                # Add to database
                 new_wallpaper = {
                     'id': str(uuid.uuid4()),
                     'title': file_title,
@@ -243,10 +236,8 @@ def upload_wallpaper():
         else:
             failed_count += 1
     
-    # Save updated database
     save_database(db)
     
-    # Create success/error message
     if uploaded_count > 0 and failed_count == 0:
         flash(f'Successfully uploaded {uploaded_count} wallpaper(s)!')
     elif uploaded_count > 0 and failed_count > 0:
@@ -265,23 +256,19 @@ def track_download():
     if not wallpaper_id:
         return jsonify({'error': 'Missing wallpaper_id'}), 400
     
-    # Load current database
     db = load_database()
     
-    # Initialize downloads tracking if not exists
     if 'downloads' not in db:
         db['downloads'] = []
     
-    # Add download record
     download_record = {
         'wallpaper_id': wallpaper_id,
         'timestamp': datetime.now().isoformat(),
-        'ip': request.remote_addr  # For basic analytics
+        'ip': request.remote_addr
     }
     
     db['downloads'].append(download_record)
     
-    # Update wallpaper download count
     for wallpaper in db['wallpapers']:
         if wallpaper['id'] == wallpaper_id:
             wallpaper['download_count'] = wallpaper.get('download_count', 0) + 1
@@ -297,16 +284,14 @@ def get_popular_wallpapers():
     wallpapers = db.get('wallpapers', [])
     device_type = request.args.get('device', 'mobile')
     
-    # Filter by device type
     if device_type in ['mobile', 'pc']:
         wallpapers = [w for w in wallpapers if w.get('device_type', 'mobile') == device_type]
     
-    # Sort by download count (descending)
     popular_wallpapers = sorted(
         wallpapers, 
         key=lambda x: x.get('download_count', 0), 
         reverse=True
-    )[:6]  # Top 6 popular wallpapers
+    )[:6]
     
     return jsonify(popular_wallpapers)
 
@@ -318,31 +303,26 @@ def get_download_stats():
     wallpapers = db.get('wallpapers', [])
     device_type = request.args.get('device', 'mobile')
     
-    # Filter wallpapers by device type
     if device_type in ['mobile', 'pc']:
         filtered_wallpapers = [w for w in wallpapers if w.get('device_type', 'mobile') == device_type]
     else:
         filtered_wallpapers = wallpapers
     
-    # Filter downloads for the device type
     filtered_downloads = []
     wallpaper_ids = [w['id'] for w in filtered_wallpapers]
     for download in downloads:
         if download['wallpaper_id'] in wallpaper_ids:
             filtered_downloads.append(download)
     
-    # Calculate stats
     total_downloads = len(filtered_downloads)
     total_wallpapers = len(filtered_wallpapers)
     
-    # Downloads in last 24 hours
     yesterday = datetime.now() - timedelta(days=1)
     recent_downloads = [
         d for d in filtered_downloads 
         if datetime.fromisoformat(d['timestamp']) > yesterday
     ]
     
-    # Most popular categories for the device type
     category_downloads = Counter()
     for download in filtered_downloads:
         for wallpaper in filtered_wallpapers:
@@ -371,13 +351,9 @@ def admin_analytics():
 @app.route('/api/delete-wallpaper/<wallpaper_id>', methods=['DELETE'])
 def delete_wallpaper(wallpaper_id):
     """Delete a wallpaper by ID"""
-    # Check if request has proper authorization (you might want to add secret check)
-    
     try:
-        # Load current database
         db = load_database()
         
-        # Find wallpaper to delete
         wallpaper_to_delete = None
         for wallpaper in db['wallpapers']:
             if wallpaper['id'] == wallpaper_id:
@@ -387,19 +363,15 @@ def delete_wallpaper(wallpaper_id):
         if not wallpaper_to_delete:
             return jsonify({'error': 'Wallpaper not found'}), 404
         
-        # Delete file from filesystem
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], wallpaper_to_delete['filename'])
         if os.path.exists(file_path):
             os.remove(file_path)
         
-        # Remove from database
         db['wallpapers'] = [w for w in db['wallpapers'] if w['id'] != wallpaper_id]
         
-        # Remove associated download records
         if 'downloads' in db:
             db['downloads'] = [d for d in db['downloads'] if d['wallpaper_id'] != wallpaper_id]
         
-        # Save updated database
         save_database(db)
         
         return jsonify({
@@ -410,5 +382,15 @@ def delete_wallpaper(wallpaper_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    return jsonify({'status': 'healthy', 'timestamp': datetime.now().isoformat()})
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+    # For local development
+    app.run(debug=True, host='0.0.0.0', port=5000)
+else:
+    # For production (Render)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)

@@ -16,7 +16,9 @@ document.addEventListener("DOMContentLoaded", () => {
       msg.className = `custom-message ${type}`
       msg.innerHTML = `<span class="message-text">${message}</span>`
       msgContainer.appendChild(msg)
-      setTimeout(() => { if (msg.parentNode) msg.remove() }, duration)
+      setTimeout(() => {
+        if (msg.parentNode) msg.remove()
+      }, duration)
     } else {
       console.log(`Message: ${message}, Type: ${type}, Duration: ${duration}`)
     }
@@ -68,15 +70,15 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleMultipleFiles(files) {
     const maxFiles = 10
     // Prevent duplicates
-    const existingNames = new Set(selectedFiles.map(f => f.name + f.size))
-    const newFiles = files.filter(f => !existingNames.has(f.name + f.size))
+    const existingNames = new Set(selectedFiles.map((f) => f.name + f.size))
+    const newFiles = files.filter((f) => !existingNames.has(f.name + f.size))
     if (selectedFiles.length + newFiles.length > maxFiles) {
       showMessage(`Too many files selected. Maximum ${maxFiles} files allowed at once.`, "error", 4000)
       return
     }
     const errors = validateFiles([...selectedFiles, ...newFiles])
     if (errors.length > 0) {
-      errors.forEach(err => showMessage(err, "error", 4000))
+      errors.forEach((err) => showMessage(err, "error", 4000))
       return
     }
     const validFiles = []
@@ -262,15 +264,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add clear all button to preview
   function addClearAllButton() {
-  // Remove any existing clear button first
-  const existing = filePreview.querySelector('.btn-secondary')
-  if (existing) existing.remove()
-  const clearBtn = document.createElement("button")
-  clearBtn.type = "button"
-  clearBtn.className = "btn-secondary"
-  clearBtn.style.marginTop = "1rem"
-  clearBtn.textContent = "🗑️ Clear All Files"
-  clearBtn.onclick = window.clearAllFiles
-  filePreview.appendChild(clearBtn)
+    // Remove any existing clear button first
+    const existing = filePreview.querySelector(".btn-secondary")
+    if (existing) existing.remove()
+    const clearBtn = document.createElement("button")
+    clearBtn.type = "button"
+    clearBtn.className = "btn-secondary"
+    clearBtn.style.marginTop = "1rem"
+    clearBtn.textContent = "🗑️ Clear All Files"
+    clearBtn.onclick = window.clearAllFiles
+    filePreview.appendChild(clearBtn)
   }
 })
