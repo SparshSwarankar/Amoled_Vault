@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amoled Vault - Premium Wallpapers</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#111111">
+    <link rel="shortcut icon" href="/static/Colorful Minimalist Space Desktop Wallpaper 2.png" type="image/x-icon">
+</head>
+<body>
+
+    <!-- Custom Install App Prompt -->
+    <div id="install-app-prompt" class="install-app-prompt hidden">
+        <div class="install-app-content">
+            <div class="install-app-icon">📲</div>
+            <div class="install-app-text">
+                <h3>Install Amoled Vault</h3>
+                <p>Add this app to your home screen for a better experience!</p>
+            </div>
+            <div class="install-app-actions">
+                <button id="install-app-btn" class="install-btn">Install</button>
+                <button id="dismiss-install-btn" class="dismiss-btn">Maybe Later</button>
+            </div>
+        </div>
+    </div>
+    <!-- Message Container -->
+    <div id="message-container" class="message-container"></div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Download Modal -->
+    <div id="download-modal" class="download-modal hidden">
+        <div class="download-modal-content">
+            <div class="download-icon">📥</div>
+            <h3 id="download-title">Downloading...</h3>
+            <p id="download-subtitle">Thank you for following us on Instagram!</p>
+            <div class="download-progress">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wallpaper Preview Modal -->
+    <div id="wallpaper-modal" class="wallpaper-modal hidden">
+        <div class="modal-backdrop" onclick="closeWallpaperModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-wallpaper-title">Wallpaper Preview</h3>
+                <button class="modal-close" onclick="closeWallpaperModal()">×</button>
+            </div>
+            <div class="modal-image-container">
+                <img id="modal-wallpaper-image" src="/placeholder.svg" alt="" class="modal-image">
+                <div class="modal-loading">
+                    <div class="spinner"></div>
+                    <p>Loading wallpaper...</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <div class="modal-info">
+                    <span id="modal-category" class="category-tag"></span>
+                    <span id="modal-downloads" class="download-info">0 downloads</span>
+                </div>
+                <button id="modal-download-btn" class="download-btn">
+                    📥 Download Wallpaper
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading amazing wallpapers...</p>
+        </div>
+    </div>
+
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">🎨 Amoled Vault</h1>
+                <p class="tagline">Premium wallpapers for your devices</p>
+                
+                <!-- Device Type Toggle -->
+                <div class="device-toggle-container">
+                    <div class="device-toggle">
+                        <button class="device-btn active" data-device="mobile" onclick="switchDeviceType('mobile')">
+                            📱 Mobile
+                        </button>
+                        <button class="device-btn" data-device="pc" onclick="switchDeviceType('pc')">
+                            💻 PC
+                        </button>
+                    </div>
+                    <div class="device-info">
+                        <span id="device-count">{{ wallpapers|length }}</span> wallpapers available
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Welcome Banner -->
+        <div id="welcome-banner" class="welcome-banner">
+            <div class="welcome-content">
+                <h2>Welcome to Amoled Vault! 🎨</h2>
+                <p>Discover amazing wallpapers for your devices</p>
+                <button class="welcome-close" onclick="closeWelcomeBanner()">×</button>
+            </div>
+        </div>
+
+        <!-- Mobile Hint Banner -->
+        <div id="mobile-hint" class="mobile-hint hidden">
+            <div class="hint-content">
+                <span class="hint-icon">📱</span>
+                <span class="hint-text">Swipe left/right to browse carousel</span>
+                <button class="hint-close" onclick="closeMobileHint()">×</button>
+            </div>
+        </div>
+
+        <!-- Device Type Info Banner -->
+        <div id="device-info-banner" class="device-info-banner">
+            <div class="device-info-content">
+                <span class="device-icon">📱</span>
+                <div class="device-text">
+                    <h3>Mobile Wallpapers</h3>
+                    <p>Optimized for smartphones and tablets</p>
+                </div>
+                <div class="device-stats">
+                    <span id="current-device-count">{{ wallpapers|length }}</span> available
+                </div>
+            </div>
+        </div>
+
+        <!-- Carousel Section -->
+        <section class="carousel-section">
+            <h2>Latest Wallpapers</h2>
+            <div class="carousel-container">
+                <div class="carousel" id="carousel">
+                    {% for wallpaper in latest_wallpapers %}
+                    <div class="carousel-slide" data-device="{{ wallpaper.device_type }}">
+                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}" 
+                             alt="{{ wallpaper.title }}" 
+                             loading="lazy"
+                             class="wallpaper-preview-img"
+                             data-filename="{{ wallpaper.filename }}"
+                             data-title="{{ wallpaper.title }}"
+                             data-category="{{ wallpaper.category }}"
+                             data-downloads="{{ wallpaper.get('download_count', 0) }}"
+                             data-id="{{ wallpaper.id }}"
+                             data-device="{{ wallpaper.device_type }}">
+                        <div class="carousel-caption">
+                            <h3>{{ wallpaper.title }}</h3>
+                            <div class="caption-tags">
+                                <span class="category-tag">{{ wallpaper.category }}</span>
+                                <span class="device-tag device-{{ wallpaper.device_type }}">{{ wallpaper.device_type.upper() }}</span>
+                            </div>
+                            <button class="download-btn wallpaper-download-btn"
+                                    data-filename="{{ wallpaper.filename }}"
+                                    data-title="{{ wallpaper.title }}"
+                                    data-id="{{ wallpaper.id }}">
+                                📥 Download
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-btn prev" onclick="moveCarousel(-1)">❮</button>
+                <button class="carousel-btn next" onclick="moveCarousel(1)">❯</button>
+            </div>
+        </section>
+
+        <!-- Popular Wallpapers Section -->
+        <section class="popular-section">
+            <div class="section-header">
+                <h2>🔥 Most Popular</h2>
+                <div class="section-badge" id="popular-badge">This week's favorites</div>
+            </div>
+            <div class="popular-grid" id="popular-grid">
+                {% for wallpaper in popular_wallpapers %}
+                <div class="popular-card" data-device="{{ wallpaper.device_type }}">
+                    <div class="popular-image-container">
+                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}" 
+                             alt="{{ wallpaper.title }}" 
+                             loading="lazy"
+                             class="popular-image wallpaper-preview-img"
+                             data-filename="{{ wallpaper.filename }}"
+                             data-title="{{ wallpaper.title }}"
+                             data-category="{{ wallpaper.category }}"
+                             data-downloads="{{ wallpaper.get('download_count', 0) }}"
+                             data-id="{{ wallpaper.id }}"
+                             data-device="{{ wallpaper.device_type }}">
+                        <div class="download-badge">
+                            <span class="download-count">{{ wallpaper.get('download_count', 0) }}</span>
+                            <span class="download-label">downloads</span>
+                        </div>
+                        <div class="device-badge device-{{ wallpaper.device_type }}">
+                            {{ wallpaper.device_type.upper() }}
+                        </div>
+                        <div class="popular-overlay">
+                            <h4>{{ wallpaper.title }}</h4>
+                            <div class="overlay-tags">
+                                <span class="category-tag">{{ wallpaper.category }}</span>
+                            </div>
+                            <button class="download-btn wallpaper-download-btn"
+                                    data-filename="{{ wallpaper.filename }}"
+                                    data-title="{{ wallpaper.title }}"
+                                    data-id="{{ wallpaper.id }}">
+                                📥 Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="stats-section">
+            <div class="section-header">
+                <h2>📊 Download Statistics</h2>
+                <div class="section-badge" id="stats-badge">Live data</div>
+            </div>
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-downloads">-</div>
+                    <div class="stat-label">Total Downloads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="total-wallpapers">-</div>
+                    <div class="stat-label">Total Wallpapers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="downloads-24h">-</div>
+                    <div class="stat-label">Downloads (24h)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Section -->
+        <section class="filter-section">
+            <div class="section-header">
+                <h2>Browse by Category</h2>
+                <div class="section-badge" id="filter-badge">All categories</div>
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterWallpapers('all')">All</button>
+                {% for category in categories %}
+                <button class="filter-btn" onclick="filterWallpapers('{{ category.lower() }}')">{{ category.title() }}</button>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section class="gallery-section">
+            <div class="gallery-header">
+                <div class="gallery-info">
+                    <span id="gallery-count">{{ wallpapers|length }}</span> wallpapers found
+                </div>
+            </div>
+            <div class="gallery-grid" id="gallery">
+                {% for wallpaper in wallpapers %}
+                <div class="wallpaper-card" data-category="{{ wallpaper.category }}" data-device="{{ wallpaper.device_type }}">
+                    <div class="image-container">
+                        <img src="{{ url_for('static', filename='wallpapers/' + wallpaper.filename) }}" 
+                             alt="{{ wallpaper.title }}" 
+                             loading="lazy"
+                             class="wallpaper-image wallpaper-preview-img"
+                             data-filename="{{ wallpaper.filename }}"
+                             data-title="{{ wallpaper.title }}"
+                             data-category="{{ wallpaper.category }}"
+                             data-downloads="{{ wallpaper.get('download_count', 0) }}"
+                             data-id="{{ wallpaper.id }}"
+                             data-device="{{ wallpaper.device_type }}">
+                        <div class="device-badge device-{{ wallpaper.device_type }}">
+                            {{ wallpaper.device_type.upper() }}
+                        </div>
+                        <div class="image-overlay">
+                            <h3>{{ wallpaper.title }}</h3>
+                            <div class="overlay-tags">
+                                <span class="category-tag">{{ wallpaper.category }}</span>
+                            </div>
+                            <button class="download-btn wallpaper-download-btn"
+                                    data-filename="{{ wallpaper.filename }}"
+                                    data-title="{{ wallpaper.title }}"
+                                    data-id="{{ wallpaper.id }}">
+                                📥 Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- No Results Message -->
+        <div id="no-results" class="no-results hidden">
+            <div class="no-results-content">
+                <div class="no-results-icon">😔</div>
+                <h3>No wallpapers found</h3>
+                <p>Try selecting a different category or device type, or check back later for new uploads.</p>
+                <button class="btn-secondary" onclick="resetFilters()">Reset Filters</button>
+            </div>
+        </div>
+
+        <!-- Loading indicator -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading wallpapers...</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Amoled Vault. All rights reserved.</p>
+            <p>Follow us on <a href="{{ instagram_url }}" target="_blank">Instagram</a> for more amazing wallpapers!</p>
+        </div>
+    </footer>
+
+    <!-- Network Status -->
+    <div id="network-status" class="network-status hidden">
+        <div class="network-content">
+            <span id="network-icon">📡</span>
+            <span id="network-text">Checking connection...</span>
+        </div>
+    </div>
+
+    <script>
+        // Pass Instagram URL to JavaScript
+        window.INSTAGRAM_URL = '{{ instagram_url }}';
+        
+        // Store wallpaper data for JavaScript access - using JSON encoding
+        window.WALLPAPER_DATA = '{{ wallpapers|tojson }}';
+        
+        // Current device type
+        window.CURRENT_DEVICE_TYPE = 'mobile';
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+// Register service worker for PWA install prompt
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/js/service-worker.js')
+            .then(function(reg) {
+                // Service worker registered
+            })
+            .catch(function(err) {
+                console.log('ServiceWorker registration failed: ', err)
+            });
+    });
+}
+</script>
+</main>
+
+<style>
+.install-app-prompt {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: #fff;
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 24px #0008;
+    padding: 1.5rem 2.5rem;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    min-width: 320px;
+    max-width: 90vw;
+}
+.install-app-prompt.hidden { display: none; }
+.install-app-content { display: flex; align-items: center; gap: 1.5rem; }
+.install-app-icon { font-size: 2.5rem; }
+.install-app-text h3 { margin: 0 0 0.2rem 0; font-size: 1.3rem; }
+.install-app-text p { margin: 0; font-size: 1rem; color: #ccc; }
+.install-app-actions { display: flex; gap: 1rem; }
+.install-btn {
+    background: #4ecdc4;
+    color: #111;
+    border: none;
+    border-radius: 0.7rem;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+.install-btn:hover { background: #38b2ac; }
+.dismiss-btn {
+    background: transparent;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 0.7rem;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.dismiss-btn:hover { background: #333; color: #4ecdc4; }
+</style>
+
+<script>
+let deferredPrompt = null;
+const installPrompt = document.getElementById('install-app-prompt');
+const installBtn = document.getElementById('install-app-btn');
+const dismissBtn = document.getElementById('dismiss-install-btn');
+
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installPrompt.classList.remove('hidden');
+    // Hide the prompt after 5 seconds if not interacted with
+    setTimeout(() => {
+        if (!installPrompt.classList.contains('hidden')) {
+            installPrompt.classList.add('hidden');
+        }
+    }, 5000);
+});
+
+installBtn && installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            installPrompt.classList.add('hidden');
+        }
+        deferredPrompt = null;
+    }
+});
+
+dismissBtn && dismissBtn.addEventListener('click', () => {
+    installPrompt.classList.add('hidden');
+});
+</script>
+</body>
+</html>

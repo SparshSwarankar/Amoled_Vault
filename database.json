@@ -1,0 +1,43 @@
+{
+  "wallpapers": [
+    {
+      "id": "7cd80e4c-030c-45b0-bbe0-a75c00ffe53e",
+      "title": "Minimal Mood #1",
+      "category": "minimal",
+      "device_type": "mobile",
+      "filename": "63f77f42c5074637a99eda4a2518a770.jpeg",
+      "upload_date": "2025-08-10T18:28:12.786433",
+      "download_count": 0
+    },
+    {
+      "id": "9bab2047-bf74-47f2-84f7-0cfc974e7cc7",
+      "title": "Minimal Mood #2",
+      "category": "minimal",
+      "device_type": "mobile",
+      "filename": "d16d4e9fe0914359a90c4e44aa4e01ee.jpeg",
+      "upload_date": "2025-08-10T18:28:12.786433",
+      "download_count": 1
+    },
+    {
+      "id": "5a35189f-7790-4af4-b3a4-92406786445a",
+      "title": "My photo",
+      "category": "art",
+      "device_type": "mobile",
+      "filename": "f8bceb25cf434bd2acce934e4e67d1e8.webp",
+      "upload_date": "2025-08-10T18:37:25.616882",
+      "download_count": 1
+    }
+  ],
+  "downloads": [
+    {
+      "wallpaper_id": "9bab2047-bf74-47f2-84f7-0cfc974e7cc7",
+      "timestamp": "2025-08-10T18:30:11.582870",
+      "ip": "127.0.0.1"
+    },
+    {
+      "wallpaper_id": "5a35189f-7790-4af4-b3a4-92406786445a",
+      "timestamp": "2025-08-10T18:37:46.297007",
+      "ip": "192.168.1.4"
+    }
+  ]
+}

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Wallpaper - Admin Panel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="shortcut icon" href="/static/Colorful Minimalist Space Desktop Wallpaper 2.png" type="image/x-icon">
+</head>
+<body>
+    <!-- Message Container -->
+    <div id="message-container" class="message-container"></div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="upload-container">
+        {% if unauthorized %}
+        <div class="unauthorized-container">
+            <div class="unauthorized-content">
+                <div class="unauthorized-icon">🔒</div>
+                <h1>Access Denied</h1>
+                <p>You don't have permission to access this page.</p>
+                <p class="unauthorized-hint">This page requires a secret access code.</p>
+                <div class="unauthorized-actions">
+                    <a href="/" class="btn-secondary">Go Back Home</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="upload-form-container">
+            <div class="upload-header">
+                <div class="upload-title">
+                    <h1>📤 Upload Wallpaper</h1>
+                    <p class="admin-note">Admin Panel - Add new wallpapers to the collection</p>
+                </div>
+                <div class="upload-actions">
+                    <a href="/admin/analytics?secret={{ request.args.get('secret') }}" class="btn-analytics">
+                        📊 Analytics
+                    </a>
+                    <a href="/" class="btn-home">🏠 Home</a>
+                </div>
+            </div>
+            
+            <!-- Success/Error Messages will be shown here via JavaScript -->
+            <div id="upload-messages" class="upload-messages"></div>
+
+            <form method="POST" enctype="multipart/form-data" class="upload-form" id="upload-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="title">
+                            <span class="label-icon">🏷️</span>
+                            Wallpaper Title
+                        </label>
+                        <input type="text" id="title" name="title" required placeholder="Enter a descriptive title">
+                        <small class="form-hint">Choose a catchy and descriptive title</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="device_type">
+                            <span class="label-icon">📱</span>
+                            Device Type
+                        </label>
+                        <select id="device_type" name="device_type" required>
+                            <option value="">Select device type</option>
+                            <option value="mobile">📱 Mobile</option>
+                            <option value="pc">💻 PC</option>
+                        </select>
+                        <small class="form-hint">Choose the target device type</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">
+                        <span class="label-icon">📂</span>
+                        Category
+                    </label>
+                    <select id="category" name="category" required>
+                        <option value="">Select category</option>
+                        <option value="nature">🌿 Nature</option>
+                        <option value="abstract">🎨 Abstract</option>
+                        <option value="tech">💻 Tech</option>
+                        <option value="urban">🏙️ Urban</option>
+                        <option value="space">🚀 Space</option>
+                        <option value="minimal">⚪ Minimal</option>
+                        <option value="spiritual">🙏 Spiritual</option>
+                        <option value="gaming">🎮 Gaming</option>
+                        <option value="anime">🎌 Anime</option>
+                        <option value="sports">⚽ Sports</option>
+                        <option value="cars">🚗 Cars</option>
+                        <option value="music">🎵 Music</option>
+                        <option value="food">🍕 Food</option>
+                        <option value="travel">✈️ Travel</option>
+                        <option value="art">🎭 Art</art>
+                    </select>
+                    <small class="form-hint">Choose the most appropriate category</small>
+                </div>
+
+                <div class="form-group file-upload-group">
+                    <label for="file">
+                        <span class="label-icon">🖼️</span>
+                        Wallpaper Image
+                    </label>
+                    <div class="file-upload-area" id="file-upload-area">
+                        <input type="file" id="file" name="files" accept=".png,.jpg,.jpeg,.webp" multiple required>
+                        <div class="file-upload-content">
+                            <div class="upload-icon">📁</div>
+                            <p class="upload-text">Click to select or drag & drop your images</p>
+                            <p class="upload-formats">Supported: PNG, JPG, JPEG, WEBP (Multiple files allowed)</p>
+                        </div>
+                    </div>
+                    <div id="file-preview" class="file-preview hidden"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-btn">
+                    <span class="btn-icon">📤</span>
+                    <span class="btn-text">Upload Wallpaper</span>
+                    <div class="btn-loader hidden">
+                        <div class="loader-spinner"></div>
+                    </div>
+                </button>
+            </form>
+
+            <!-- Delete Section -->
+            <div class="delete-section">
+                <div class="delete-header">
+                    <h2>🗑️ Delete Wallpapers</h2>
+                    <p class="delete-note">Remove wallpapers from the collection</p>
+                </div>
+                <!-- Device Toggle (copied from index.html) -->
+                <div class="device-toggle-container">
+                    <div class="device-toggle">
+                        <button class="device-btn active" data-device="mobile" onclick="switchDeviceType('mobile')">
+                            📱 Mobile
+                        </button>
+                        <button class="device-btn" data-device="pc" onclick="switchDeviceType('pc')">
+                            � PC
+                        </button>
+                    </div>
+                    <div class="device-info">
+                        <span id="device-count">-</span> wallpapers available
+                    </div>
+                </div>
+                <div class="wallpaper-list" id="wallpaper-list">
+                    <div class="list-loading">
+                        <div class="spinner"></div>
+                        <p>Loading wallpapers...</p>
+                    </div>
+                </div>
+                
+                <!-- Bulk Actions -->
+                <div class="bulk-actions hidden" id="bulk-actions">
+                    <div class="bulk-info">
+                        <span id="selected-count">0</span> wallpapers selected
+                    </div>
+                    <div class="bulk-buttons">
+                        <button class="bulk-btn cancel" onclick="clearSelection()">Clear Selection</button>
+                        <button class="bulk-btn delete" onclick="deleteSelected()">Delete Selected</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-info">
+                <div class="info-section">
+                    <h3>📋 Upload Guidelines</h3>
+                    <ul class="info-list">
+                        <li>Mobile: Upload wallpapers optimized for smartphones (1080x1920 or similar)</li>
+                        <li>PC: Upload wallpapers optimized for desktops (1920x1080 or higher)</li>
+                        <li>Choose appropriate categories for better organization</li>
+                        <li>Use descriptive titles for better user experience</li>
+                        <li>Ensure images are optimized for web (under 5MB recommended)</li>
+                    </ul>
+                </div>
+                
+                <div class="info-section">
+                    <h3>📂 Available Categories</h3>
+                    <ul class="info-list">
+                        <li><strong>Nature:</strong> Landscapes, animals, plants</li>
+                        <li><strong>Abstract:</strong> Artistic patterns and designs</li>
+                        <li><strong>Tech:</strong> Technology, circuits, futuristic</li>
+                        <li><strong>Urban:</strong> Cities, architecture, streets</li>
+                        <li><strong>Space:</strong> Planets, stars, galaxies</li>
+                        <li><strong>Minimal:</strong> Simple, clean designs</li>
+                        <li><strong>Spiritual:</strong> Religious, meditation, divine</li>
+                        <li><strong>Gaming:</strong> Game characters, scenes</li>
+                        <li><strong>Anime:</strong> Anime characters and art</li>
+                        <li><strong>Sports:</strong> Athletic activities, teams</li>
+                        <li><strong>Cars:</strong> Vehicles, automotive</li>
+                        <li><strong>Music:</strong> Musical instruments, artists</li>
+                        <li><strong>Food:</strong> Culinary, beverages</li>
+                        <li><strong>Travel:</strong> Destinations, landmarks</li>
+                        <li><strong>Art:</strong> Paintings, sculptures, creative</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Message system functions
+        function showMessage(message, type = "info", duration = 3000) {
+            const messageContainer = document.getElementById("message-container")
+            const messageEl = document.createElement("div")
+            messageEl.className = `custom-message ${type}`
+            messageEl.innerHTML = `
+                <div class="message-content">
+                    <span class="message-text">${message}</span>
+                    <button class="message-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `
+
+            messageContainer.appendChild(messageEl)
+
+            setTimeout(() => {
+                if (messageEl.parentNode) {
+                    messageEl.remove()
+                }
+            }, duration)
+        }
+
+        function showToast(message, type = "info", duration = 3000) {
+            const toastContainer = document.getElementById("toast-container")
+            const toast = document.createElement("div")
+            toast.className = `toast ${type}`
+            toast.textContent = message
+
+            toastContainer.appendChild(toast)
+
+            setTimeout(() => toast.classList.add("show"), 100)
+
+            setTimeout(() => {
+                toast.classList.remove("show")
+                setTimeout(() => toast.remove(), 300)
+            }, duration)
+        }
+
+        // Check for flash messages and show them as custom messages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check URL parameters for success/error messages
+            const urlParams = new URLSearchParams(window.location.search);
+            const success = urlParams.get('success');
+            const error = urlParams.get('error');
+
+            if (success) {
+                showMessage("🎉 Wallpaper uploaded successfully! Your wallpaper is now live on the website.", "success", 5000);
+                showToast("Upload successful! ✅", "success", 3000);
+            }
+
+            if (error) {
+                showMessage("❌ Upload failed. Please check your file and try again.", "error", 4000);
+                showToast("Upload failed! ❌", "error", 3000);
+            }
+
+            // File upload handling
+            const fileInput = document.getElementById('file');
+            const fileUploadArea = document.getElementById('file-upload-area');
+            const filePreview = document.getElementById('file-preview');
+            const uploadForm = document.getElementById('upload-form');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // Drag and drop functionality
+            fileUploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.add('drag-over');
+            });
+
+            fileUploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.remove('drag-over');
+            });
+
+            fileUploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileUploadArea.classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    handleFileSelect(files);
+                }
+            });
+
+            // File input change
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files);
+                }
+            });
+
+            // Handle file selection
+            function handleFileSelect(files) {
+                filePreview.innerHTML = ''; // Clear previous previews
+                let validFiles = [];
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+
+                    // Validate file type
+                    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+                    if (!allowedTypes.includes(file.type)) {
+                        showMessage(`❌ Invalid file type for ${file.name}. Please select PNG, JPG, JPEG, or WEBP files.`, "error", 4000);
+                        continue; // Skip to the next file
+                    }
+
+                    // Validate file size (5MB limit)
+                    if (file.size > 10 * 1024 * 1024) {
+                        showMessage(`⚠️ File size too large for ${file.name}. Please select a file under 10MB.`, "error", 4000);
+                        continue; // Skip to the next file
+                    }
+
+                    validFiles.push(file);
+
+                    // Show file preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'preview-item';
+                        previewItem.innerHTML = `
+                            <div class="preview-content">
+                                <img src="${e.target.result}" alt="Preview" class="preview-image">
+                                <div class="preview-info">
+                                    <p class="preview-name">${file.name}</p>
+                                    <p class="preview-size">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                </div>
+                                <button type="button" class="preview-remove" onclick="removeFilePreviewItem(this)">×</button>
+                            </div>
+                        `;
+                        filePreview.classList.remove('hidden');
+                        filePreview.appendChild(previewItem);
+                    };
+                    reader.readAsDataURL(file);
+                }
+
+                if (validFiles.length > 0) {
+                    showToast(`Selected ${validFiles.length} files! 📁`, "success", 2000);
+                }
+            }
+
+            // Remove file preview item
+            window.removeFilePreviewItem = function(element) {
+                element.closest('.preview-item').remove();
+                if (filePreview.children.length === 0) {
+                    filePreview.classList.add('hidden');
+                }
+                showToast("File removed 🗑️", "info", 2000);
+            };
+
+            // Form submission
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                showMessage("📤 Uploading wallpapers... Please wait.", "info", 3000);
+                showToast("Upload in progress... ⏳", "info", 2000);
+
+                // Submit form
+                setTimeout(() => {
+                    uploadForm.submit();
+                }, 1000);
+            });
+        });
+
+        // Load wallpapers for delete section
+        let CURRENT_DEVICE_TYPE = 'mobile';
+        async function loadWallpapersForDelete(deviceType = 'mobile') {
+            try {
+                const response = await fetch(`/api/wallpapers?device=${deviceType}`);
+                const wallpapers = await response.json();
+                renderDeleteWallpapers(wallpapers);
+                document.getElementById('device-count').textContent = wallpapers.length;
+                showToast(`Loaded ${wallpapers.length} wallpapers 📋`, "success", 2000);
+            } catch (error) {
+                console.error('Error loading wallpapers:', error);
+                showMessage("Failed to load wallpapers for deletion 😞", "error", 3000);
+            }
+        }
+
+        function renderDeleteWallpapers(wallpapers) {
+            const wallpaperList = document.getElementById('wallpaper-list');
+            if (wallpapers.length === 0) {
+                wallpaperList.innerHTML = `
+                    <div class="no-wallpapers">
+                        <div class="no-wallpapers-icon">📭</div>
+                        <p>No wallpapers found</p>
+                    </div>
+                `;
+                return;
+            }
+            wallpaperList.innerHTML = wallpapers.map(wallpaper => `
+                <div class="wallpaper-item" data-id="${wallpaper.id}">
+                    <div class="item-checkbox">
+                        <input type="checkbox" id="wallpaper-${wallpaper.id}" onchange="updateSelection()">
+                    </div>
+                    <div class="item-image">
+                        <img src="/static/wallpapers/${wallpaper.filename}" alt="${wallpaper.title}" loading="lazy">
+                    </div>
+                    <div class="item-info">
+                        <h4>${wallpaper.title}</h4>
+                        <div class="item-meta">
+                            <span class="category-badge category-${wallpaper.category}">${wallpaper.category}</span>
+                            <span class="device-badge device-${wallpaper.device_type || 'mobile'}">${(wallpaper.device_type || 'mobile').toUpperCase()}</span>
+                            <span class="download-count">${(wallpaper.download_count || 0).toLocaleString()} downloads</span>
+                            <span class="upload-date">${new Date(wallpaper.upload_date).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn preview" onclick="previewWallpaper('${wallpaper.filename}', '${wallpaper.title}')">
+                            👁️ Preview
+                        </button>
+                        <button class="action-btn delete" onclick="deleteWallpaper('${wallpaper.id}', '${wallpaper.title}')">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function switchDeviceType(device) {
+            CURRENT_DEVICE_TYPE = device;
+            document.querySelectorAll('.device-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-device') === device);
+            });
+            loadWallpapersForDelete(device);
+            updateSelection();
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadWallpapersForDelete(CURRENT_DEVICE_TYPE);
+        });
+
+        // Update selection count
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll('.wallpaper-item input[type="checkbox"]');
+            const selected = Array.from(checkboxes).filter(cb => cb.checked);
+            const bulkActions = document.getElementById('bulk-actions');
+            const selectedCount = document.getElementById('selected-count');
+            
+            selectedCount.textContent = selected.length;
+            
+            if (selected.length > 0) {
+                bulkActions.classList.remove('hidden');
+            } else {
+                bulkActions.classList.add('hidden');
+            }
+        }
+
+        // Clear selection
+        function clearSelection() {
+            const checkboxes = document.querySelectorAll('.wallpaper-item input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            updateSelection();
+            showToast("Selection cleared 🧹", "info", 1500);
+        }
+
+        // Delete single wallpaper
+        async function deleteWallpaper(wallpaperId, title) {
+            if (!confirm(`Are you sure you want to delete "${title}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                showMessage(`Deleting "${title}"... 🗑️`, "info", 2000);
+                
+                const response = await fetch(`/api/delete-wallpaper/${wallpaperId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage(`"${title}" deleted successfully! ✅`, "success", 3000);
+                    showToast("Wallpaper deleted! 🗑️", "success", 2000);
+                    
+                    // Remove from list
+                    const wallpaperItem = document.querySelector(`[data-id="${wallpaperId}"]`);
+                    if (wallpaperItem) {
+                        wallpaperItem.remove();
+                    }
+                    
+                    updateSelection();
+                } else {
+                    throw new Error('Delete failed');
+                }
+                
+            } catch (error) {
+                console.error('Error deleting wallpaper:', error);
+                showMessage("Failed to delete wallpaper 😞", "error", 3000);
+            }
+        }
+
+        // Delete selected wallpapers
+        async function deleteSelected() {
+            const checkboxes = document.querySelectorAll('.wallpaper-item input[type="checkbox"]:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.closest('.wallpaper-item').dataset.id);
+            
+            if (selectedIds.length === 0) return;
+            
+            if (!confirm(`Are you sure you want to delete ${selectedIds.length} wallpaper(s)?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                showMessage(`Deleting ${selectedIds.length} wallpapers... 🗑️`, "info", 3000);
+                
+                for (const id of selectedIds) {
+                    const response = await fetch(`/api/delete-wallpaper/${id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        const wallpaperItem = document.querySelector(`[data-id="${id}"]`);
+                        if (wallpaperItem) {
+                            wallpaperItem.remove();
+                        }
+                    }
+                }
+                
+                showMessage(`${selectedIds.length} wallpapers deleted successfully! ✅`, "success", 4000);
+                showToast("Bulk delete completed! 🗑️", "success", 3000);
+                updateSelection();
+                
+            } catch (error) {
+                console.error('Error deleting wallpapers:', error);
+                showMessage("Failed to delete some wallpapers 😞", "error", 3000);
+            }
+        }
+
+        // Preview wallpaper
+        function previewWallpaper(filename, title) {
+            const modal = document.createElement('div');
+            modal.className = 'preview-modal';
+            modal.innerHTML = `
+                <div class="preview-backdrop" onclick="this.parentElement.remove()"></div>
+                <div class="preview-content">
+                    <div class="preview-header">
+                        <h3>${title}</h3>
+                        <button onclick="this.closest('.preview-modal').remove()">×</button>
+                    </div>
+                    <img src="/static/wallpapers/${filename}" alt="${title}" class="preview-image">
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            showToast(`Previewing ${title} 👁️`, "info", 2000);
+        }
+
+        // Load wallpapers when page loads
+        if (document.getElementById('wallpaper-list')) {
+            loadWallpapersForDelete();
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/upload_multiple.js') }}"></script>
+</body>
+</html>
