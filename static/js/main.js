@@ -21,19 +21,19 @@ const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/
 const supportsVibration = "vibrate" in navigator
 
 // Show a blocking message if on mobile
-document.addEventListener("DOMContentLoaded", () => {
-  if (isMobile) {
-    document.body.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;background:#111;color:#fff;">
-        <div style="font-size:3rem;">⚠️</div>
-        <h2 style="margin:1rem 0;">Mobile Not Supported</h2>
-        <p style="font-size:1.2rem;max-width:400px;">This website is not available on mobile devices.<br>Please use a desktop or laptop for the best experience.</p>
-      </div>
-    `
-    document.body.style.background = "#111"
-    document.body.style.color = "#fff"
-  }
-})
+// document.addEventListener("DOMContentLoaded", () => {
+//   if (isMobile) {
+//     document.body.innerHTML = `
+//       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;background:#111;color:#fff;">
+//         <div style="font-size:3rem;">⚠️</div>
+//         <h2 style="margin:1rem 0;">Mobile Not Supported</h2>
+//         <p style="font-size:1.2rem;max-width:400px;">This website is not available on mobile devices.<br>Please use a desktop or laptop for the best experience.</p>
+//       </div>
+//     `
+//     document.body.style.background = "#111"
+//     document.body.style.color = "#fff"
+//   }
+// })
 
 // Vibration patterns - reduced frequency
 const vibrationPatterns = {
