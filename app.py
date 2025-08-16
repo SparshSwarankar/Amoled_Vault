@@ -167,7 +167,7 @@ def download_wallpaper(filename):
 
 # Supabase connection
 SUPABASE_URL = "https://pasetesvrkifdxfolcoq.supabase.co"
-SUPABASE_KEY = "sb_secret_3Hm9MdC45QuwEStr9Jw5AQ_etwkJGgj"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBhc2V0ZXN2cmtpZmR4Zm9sY29xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzM3ODksImV4cCI6MjA3MDUwOTc4OX0.m9X2b6t416IZQXJStpI0GbexsOiqlBM8ITjDPxTrEYM"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 BUCKET_NAME = "wallpapers"  # make sure this bucket exists
