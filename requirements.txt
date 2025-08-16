@@ -1,8 +1,13 @@
-Flask==2.3.3
+# Flask==2.3.3
 Werkzeug==2.3.7
-gunicorn==20.1.0
-supabase==2.4.0
+# gunicorn==20.1.0
+# supabase==2.4.0
 websockets==12.0
-python-dotenv==1.0.1
+# python-dotenv==1.0.1
 supabase==2.4.0
-httpx==0.24.0
+# httpx==0.24.0
+Flask==3.0.3
+gunicorn==22.0.0
+supabase==2.7.4
+httpx<0.28          # IMPORTANT: avoids TypeError: Client.__init__() got unexpected keyword argument 'proxy'
+python-dotenv==1.0.1
