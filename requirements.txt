@@ -8,6 +8,6 @@ supabase==2.4.0
 # httpx==0.24.0
 Flask==3.0.3
 gunicorn==22.0.0
-supabase==2.7.4
+# supabase==2.7.4
 httpx<0.28          # IMPORTANT: avoids TypeError: Client.__init__() got unexpected keyword argument 'proxy'
 python-dotenv==1.0.1
